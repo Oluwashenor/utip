@@ -1,6 +1,12 @@
-import 'package:flutter/material.dart';
+import 'dart:ffi';
 
+import 'package:flutter/material.dart';
+import 'package:utip/widgets/tip_row.dart';
+
+import 'widgets/bill_amount.dart';
 import 'widgets/person_counter.dart';
+import 'widgets/tip_slider.dart';
+import 'widgets/total_per_person.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,8 +37,19 @@ class UTip extends StatefulWidget {
 
 class _UTipState extends State<UTip> {
   int _personCount = 1;
+  double _tipPercentage = 0.0;
+  double _billTotal = 100;
 
   //Methods
+
+  double totalPerPerson() {
+    return (((_billTotal * _tipPercentage) + (_billTotal)) / _personCount);
+  }
+
+  double totalTip() {
+    return ((_billTotal * _tipPercentage));
+  }
+
   void increment() {
     setState(() {
       _personCount++;
@@ -50,6 +67,8 @@ class _UTipState extends State<UTip> {
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
+    double total = totalPerPerson();
+    double totalT = totalTip();
     final style = theme.textTheme.titleMedium?.copyWith(
         color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold);
     return Scaffold(
@@ -59,42 +78,24 @@ class _UTipState extends State<UTip> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          TotalPerPerson(style: style, total: total, theme: theme),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    borderRadius: BorderRadius.circular(10)),
-                child: Column(
-                  children: [
-                    Text(
-                      'Total Per Person',
-                      style: style,
-                    ),
-                    Text('\$23.89',
-                        style: style?.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                            fontSize: theme.textTheme.displaySmall?.fontSize))
-                  ],
-                )),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                     border:
                         Border.all(color: theme.colorScheme.primary, width: 2)),
                 child: Column(
                   children: [
-                    TextField(
-                        decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.attach_money),
-                            labelText: 'Bill Amount'),
-                        keyboardType: TextInputType.number,
-                        onChanged: (String value) {}),
+                    BillAmountField(
+                        billAmount: _billTotal.toString(),
+                        onChanged: (value) {
+                          setState(() {
+                            _billTotal = double.parse(value);
+                          });
+                        }),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Row(
@@ -109,6 +110,19 @@ class _UTipState extends State<UTip> {
                           )
                         ],
                       ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TipRow(theme: theme, totalT: totalT),
+                    ),
+                    Text('${(_tipPercentage * 100).round()} %'),
+                    TipSlider(
+                      tipPercentage: _tipPercentage,
+                      onChanged: (double value) {
+                        setState(() {
+                          _tipPercentage = value;
+                        });
+                      },
                     )
                   ],
                 )),
