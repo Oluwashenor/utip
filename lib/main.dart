@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:utip/providers/ThemeProvider.dart';
 import 'package:utip/providers/TipCalculatorModel.dart';
 import 'package:utip/widgets/tip_row.dart';
 import 'widgets/bill_amount.dart';
@@ -8,8 +9,13 @@ import 'widgets/tip_slider.dart';
 import 'widgets/total_per_person.dart';
 
 void main() {
-  runApp(ChangeNotifierProvider(
-      create: (context) => TipCalculatorModel(), child: const MyApp()));
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (context) => TipCalculatorModel()),
+      ChangeNotifierProvider(create: (context) => Themeprovider())
+    ],
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -18,13 +24,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final themeprovider = Provider.of<Themeprovider>(context);
     return MaterialApp(
-        title: 'UTip',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: const UTip());
+        title: 'UTip', theme: themeprovider.currentTheme, home: const UTip());
   }
 }
 
@@ -39,12 +41,16 @@ class _UTipState extends State<UTip> {
   @override
   Widget build(BuildContext context) {
     final model = Provider.of<TipCalculatorModel>(context);
+    final themeProvider = Provider.of<Themeprovider>(context);
+    //print("Current theme : ${themeProvider.currentTheme.colorScheme.toString()}");
+    //print("Current theme : ${themeProvider.currentTheme.toString()}");
     var theme = Theme.of(context);
     final style = theme.textTheme.titleMedium?.copyWith(
         color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold);
     return Scaffold(
       appBar: AppBar(
         title: const Text('UTip'),
+        actions: const [ToggleThemeButton()],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -77,7 +83,7 @@ class _UTipState extends State<UTip> {
                             personCount: model.personCount,
                             onDecrement: () {
                               if (model.personCount > 1) {
-                                model.updatePersonCount(model.personCount);
+                                model.updatePersonCount(model.personCount - 1);
                               }
                             },
                             onIncrement: () {
@@ -108,5 +114,21 @@ class _UTipState extends State<UTip> {
         ],
       ),
     );
+  }
+}
+
+class ToggleThemeButton extends StatelessWidget {
+  const ToggleThemeButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<Themeprovider>(context);
+    return IconButton(
+        onPressed: () {
+          themeProvider.toggle();
+        },
+        icon: themeProvider.isDarkMode
+            ? const Icon(Icons.sunny)
+            : const Icon(Icons.nightlight_round));
   }
 }
